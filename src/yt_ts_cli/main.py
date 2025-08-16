@@ -75,11 +75,15 @@ def get_language_name(lang_code):
 
 def download_transcript(url, language, output_file, subtitle_type):
     """Download transcript for specified language."""
-    print(f"Downloading {subtitle_type} transcript in '{language}' for: {url}")
+    print(f"Downloading {subtitle_type} transcript in '{language}' for: {url}", file=sys.stderr)
     
-    # Create output directory if it doesn't exist
-    output_path = Path(output_file)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    # Check if output should go to stdout
+    write_to_stdout = output_file == '-' or output_file.lower() == 'stdout'
+    
+    if not write_to_stdout:
+        # Create output directory if it doesn't exist
+        output_path = Path(output_file)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Create a temporary directory in /tmp for yt-dlp download
     with tempfile.TemporaryDirectory(prefix="youtube_transcript_") as temp_dir:
@@ -93,7 +97,7 @@ def download_transcript(url, language, output_file, subtitle_type):
             'subtitlesformat': 'vtt',
             'skip_download': True,
             'outtmpl': f'{temp_path}/%(title)s.%(ext)s',
-            'quiet': False,
+            'quiet': True,  # Always quiet when writing to stdout
         }
         
         try:
@@ -107,39 +111,85 @@ def download_transcript(url, language, output_file, subtitle_type):
                 has_auto = language in auto_subs
                 
                 if subtitle_type == 'manual' and not has_manual:
-                    print(f"❌ Manual subtitles not available for language '{language}'")
+                    print(f"❌ Manual subtitles not available for language '{language}'", file=sys.stderr)
                     return
                 elif subtitle_type == 'auto' and not has_auto:
-                    print(f"❌ Auto-generated subtitles not available for language '{language}'")
+                    print(f"❌ Auto-generated subtitles not available for language '{language}'", file=sys.stderr)
                     return
                 elif subtitle_type == 'both' and not (has_manual or has_auto):
-                    print(f"❌ No subtitles available for language '{language}'")
+                    print(f"❌ No subtitles available for language '{language}'", file=sys.stderr)
                     return
                 
                 # Download the subtitles
                 ydl.download([url])
                 
-                print("✅ Download completed successfully!")
+                if not write_to_stdout:
+                    print("✅ Download completed successfully!", file=sys.stderr)
                 
                 # Find downloaded VTT files
                 vtt_files = list(temp_path.glob("*.vtt"))
                 if vtt_files:
                     # Use the first VTT file found
                     vtt_file = vtt_files[0]
-                    print(f"📄 Downloaded: {vtt_file}")
+                    if not write_to_stdout:
+                        print(f"📄 Downloaded: {vtt_file}", file=sys.stderr)
                     
-                    # Convert to plain text and save to specified output file
-                    convert_vtt_to_text_file(vtt_file, output_path)
+                    # Convert to plain text
+                    if write_to_stdout:
+                        convert_vtt_to_stdout(vtt_file)
+                    else:
+                        convert_vtt_to_text_file(vtt_file, output_path)
                     
                     # VTT files will be automatically deleted when temp directory is cleaned up
                     
                 else:
-                    print("⚠️  No .vtt files found. The transcript might not be available in the requested language.")
+                    print("⚠️  No .vtt files found. The transcript might not be available in the requested language.", file=sys.stderr)
                     
         except Exception as e:
-            print(f"❌ Download failed: {e}")
+            print(f"❌ Download failed: {e}", file=sys.stderr)
         
         # Temporary directory and all its contents are automatically deleted here
+
+
+def convert_vtt_to_stdout(vtt_file):
+    """Convert VTT file to plain text and write to stdout."""
+    try:
+        with open(vtt_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Remove VTT headers and timestamps
+        lines = content.split('\n')
+        text_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            # Skip VTT headers, timestamps, style tags, and empty lines
+            if (line and 
+                not line.startswith('WEBVTT') and 
+                not line.startswith('NOTE') and
+                not line.startswith('STYLE') and
+                not '-->' in line and
+                not re.match(r'^\d+$', line) and
+                not line.startswith('<') and
+                not line.endswith('>')):
+                
+                # Remove timestamp tags like <00:01:23.456>
+                line = re.sub(r'<[\d:.,]+>', '', line)
+                # Remove other HTML-like tags
+                line = re.sub(r'<[^>]+>', '', line)
+                
+                if line:  # Only add non-empty lines
+                    text_lines.append(line)
+        
+        # Join lines and clean up extra whitespace
+        text_content = '\n'.join(text_lines)
+        text_content = re.sub(r'\n\s*\n', '\n\n', text_content)  # Clean up multiple newlines
+        
+        # Write plain text to stdout
+        print(text_content)
+        
+    except Exception as e:
+        print(f"❌ Error converting to text: {e}", file=sys.stderr)
 
 
 def convert_vtt_to_text_file(vtt_file, output_file):
@@ -151,7 +201,7 @@ def convert_vtt_to_text_file(vtt_file, output_file):
         # If the output path exists and is a directory, create a filename inside it
         if output_path.exists() and output_path.is_dir():
             output_path = output_path / "transcript.txt"
-            print(f"⚠️  Output path is a directory, saving to: {output_path}")
+            print(f"⚠️  Output path is a directory, saving to: {output_path}", file=sys.stderr)
         
         # Create parent directory if it doesn't exist
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -191,12 +241,12 @@ def convert_vtt_to_text_file(vtt_file, output_file):
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(text_content)
         
-        print(f"✅ Transcript saved as plain text: {output_path}")
+        print(f"✅ Transcript saved as plain text: {output_path}", file=sys.stderr)
         
     except Exception as e:
-        print(f"❌ Error converting to text: {e}")
-        print(f"Debug info - output_file: {output_file}, type: {type(output_file)}")
-        print(f"Debug info - resolved path: {Path(output_file).resolve()}")
+        print(f"❌ Error converting to text: {e}", file=sys.stderr)
+        print(f"Debug info - output_file: {output_file}, type: {type(output_file)}", file=sys.stderr)
+        print(f"Debug info - resolved path: {Path(output_file).resolve()}", file=sys.stderr)
 
 
 def main():
@@ -209,6 +259,8 @@ Examples:
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l en -t manual -o transcript_en.txt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o ./transcripts/spanish.txt
+  %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o - > transcript.txt
+  %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o stdout | grep "keyword"
         """
     )
     
@@ -226,7 +278,7 @@ Examples:
     download_parser.add_argument('-t', '--type', choices=['manual', 'auto', 'both'], 
                                default='both', help='Subtitle type (default: both)')
     download_parser.add_argument('-o', '--output', default='./transcript.txt', 
-                               help='Output file path (default: ./transcript.txt)')
+                               help='Output file path (default: ./transcript.txt). Use "-" or "stdout" to write to stdout')
     
     args = parser.parse_args()
     
