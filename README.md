@@ -91,6 +91,10 @@ yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o - | wc -w
 
 ### Command Options
 
+#### Global Options
+- `--version`: Show version information and exit
+- `--silent`: Suppress all messages except output (disabled by default)
+
 #### `list` command
 - `url`: YouTube video URL
 
@@ -137,6 +141,13 @@ yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es -o -
 yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es -o stdout | head -10
 yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es -o - | grep -i "muscle"
 yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es -o - | wc -w
+
+# Use silent mode to suppress all messages
+yt-ts-cli --silent download https://youtu.be/5X6uoKA41h4 -l es -o - | head -10
+yt-ts-cli --silent list https://youtu.be/5X6uoKA41h4
+
+# Show version
+yt-ts-cli --version
 ```
 
 ## Building and Distribution
@@ -232,6 +243,13 @@ MIT License - see LICENSE file for details.
    - Or use pip instead: `pip install .`
 
 ## Changelog
+
+### v0.3.0
+- Added `--silent` flag to supress messages
+- Added `--version` flag to display version information
+- Enhanced silent mode to suppress ALL messages (including app messages)
+- Improved yt-dlp output suppression with better error handling
+- Silent mode now provides completely clean output for piping
 
 ### v0.2.0
 - Added stdout support with `-o -` or `-o stdout`
