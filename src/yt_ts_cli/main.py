@@ -14,7 +14,7 @@ import yt_dlp
 import re
 
 from . import __version__
-from .logging_config import setup_logging, get_logger, SuppressYtDlpLogger
+from .logging_config import setup_logging, SuppressYtDlpLogger
 
 
 @contextlib.contextmanager

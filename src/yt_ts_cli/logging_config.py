@@ -4,7 +4,6 @@ Logging configuration for YouTube Transcript CLI.
 
 import logging
 import sys
-from typing import Optional
 
 
 class ColoredFormatter(logging.Formatter):
@@ -90,19 +89,6 @@ def setup_logging(silent: bool = False, verbose: bool = False, use_colors: bool 
     logger.propagate = False
     
     return logger
-
-
-def get_logger(name: Optional[str] = None) -> logging.Logger:
-    """
-    Get a logger instance.
-    
-    Args:
-        name: Logger name, defaults to 'yt_ts_cli'
-    
-    Returns:
-        Logger instance
-    """
-    return logging.getLogger(name or 'yt_ts_cli')
 
 
 class SuppressYtDlpLogger:
