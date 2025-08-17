@@ -1,18 +1,18 @@
 # YouTube Transcript CLI (yt-ts-cli)
 
-A command-line tool to list and download YouTube video transcripts (subtitles) and convert them to plain text format.
+A professional command-line tool to list and download YouTube video transcripts (subtitles) and convert them to plain text format.
 
 ## Features
 
-- 📝 List available manual subtitles for YouTube videos
-- 🔽 Download transcripts in multiple languages
-- 📄 Automatic conversion from VTT to clean plain text
-- 🗂️ Support for manual and auto-generated subtitles
-- 🧹 Automatic cleanup of temporary files
-- 🌍 Support for multiple language codes (en, es, fr, de, etc.)
-- 📤 Write to stdout for piping and command chaining
-
-## Installation
+- List available manual subtitles for YouTube videos
+- Download transcripts in multiple languages
+- Automatic conversion from VTT to clean plain text
+- Support for manual and auto-generated subtitles
+- Automatic cleanup of temporary files
+- Support for multiple language codes (en, es, fr, de, etc.)
+- Write to stdout for piping and command chaining
+- Professional logging with configurable verbosity levels
+- Silent mode for clean output in scripts and pipelines
 
 ## Installation
 
@@ -33,7 +33,7 @@ A command-line tool to list and download YouTube video transcripts (subtitles) a
 3. **Or install from built wheel:**
    ```bash
    uv build
-   uv pip install dist/yt_ts_cli-0.2.0-py3-none-any.whl
+   uv pip install dist/yt_ts_cli-0.4.0-py3-none-any.whl
    yt-ts-cli --help
    ```
 
@@ -64,7 +64,14 @@ uv run yt-ts-cli --help
 
 ### List Available Transcripts
 ```bash
+# Basic listing
 yt-ts-cli list https://youtu.be/VIDEO_ID
+
+# Verbose listing with debug information
+yt-ts-cli list --verbose https://youtu.be/VIDEO_ID
+
+# Silent listing (minimal output)
+yt-ts-cli list --silent https://youtu.be/VIDEO_ID
 ```
 
 ### Download Transcript
@@ -89,20 +96,48 @@ yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o - | grep "keyword"
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o - | wc -w
 ```
 
+### Logging and Verbosity Options
+
+```bash
+# Silent mode - suppress all messages except output (both positions work)
+yt-ts-cli download --silent https://youtu.be/VIDEO_ID -l es -o -
+yt-ts-cli --silent download https://youtu.be/VIDEO_ID -l es -o -
+
+# Verbose mode - detailed logging with timestamps (both positions work)
+yt-ts-cli download --verbose https://youtu.be/VIDEO_ID -l es -o transcript.txt
+yt-ts-cli --verbose download https://youtu.be/VIDEO_ID -l es -o transcript.txt
+
+# Normal mode - standard informational messages (default)
+yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o transcript.txt
+
+# Silent listing (both positions work)
+yt-ts-cli list --silent https://youtu.be/VIDEO_ID
+yt-ts-cli --silent list https://youtu.be/VIDEO_ID
+
+# Verbose listing (both positions work)
+yt-ts-cli list --verbose https://youtu.be/VIDEO_ID
+yt-ts-cli --verbose list https://youtu.be/VIDEO_ID
+```
+
 ### Command Options
 
 #### Global Options
 - `--version`: Show version information and exit
-- `--silent`: Suppress all messages except output (disabled by default)
+- `--silent`: Suppress all messages except output (can be used globally or per-command)
+- `--verbose`: Enable detailed logging with timestamps and debug information (can be used globally or per-command)
 
 #### `list` command
 - `url`: YouTube video URL
+- `--silent`: Suppress all messages except output
+- `--verbose`: Enable detailed logging with timestamps
 
 #### `download` command
 - `url`: YouTube video URL
 - `-l, --language`: Language code (required) - e.g., en, es, fr, de
 - `-t, --type`: Subtitle type - choices: manual, auto, both (default: both)
 - `-o, --output`: Output file path (default: ./transcript.txt). Use "-" or "stdout" to write to stdout
+- `--silent`: Suppress all messages except output
+- `--verbose`: Enable detailed logging with timestamps
 
 ### Language Codes
 
@@ -128,23 +163,22 @@ Common language codes supported:
 # List all available manual subtitles
 yt-ts-cli list https://youtu.be/5X6uoKA41h4
 
-# Download Spanish transcript
+# Download Spanish transcript with standard logging
 yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es-ES -o musculos_fuertes.txt
 
-# Download only manual English subtitles
-yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l en -t manual -o english_manual.txt
+# Download only manual English subtitles with verbose logging
+yt-ts-cli download --verbose https://youtu.be/5X6uoKA41h4 -l en -t manual -o english_manual.txt
 
-# Write transcript to stdout
-yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es -o -
+# Write transcript to stdout in silent mode (perfect for piping)
+yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o -
 
-# Pipe transcript to other commands
-yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es -o stdout | head -10
-yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es -o - | grep -i "muscle"
-yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es -o - | wc -w
+# Pipe transcript to other commands with clean output
+yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o stdout | head -10
+yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o - | grep -i "muscle"
+yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o - | wc -w
 
-# Use silent mode to suppress all messages
-yt-ts-cli --silent download https://youtu.be/5X6uoKA41h4 -l es -o - | head -10
-yt-ts-cli --silent list https://youtu.be/5X6uoKA41h4
+# Debug mode for troubleshooting
+yt-ts-cli list --verbose https://youtu.be/5X6uoKA41h4
 
 # Show version
 yt-ts-cli --version
@@ -161,7 +195,7 @@ This creates both wheel (.whl) and source distribution (.tar.gz) files in the `d
 
 ### Install from Local Build
 ```bash
-pip install dist/yt_ts_cli-0.2.0-py3-none-any.whl
+pip install dist/yt_ts_cli-0.4.0-py3-none-any.whl
 ```
 
 ### Share with Others
@@ -172,7 +206,7 @@ uv build
 
 # Share the wheel file
 # Others can install it with:
-pip install yt_ts_cli-0.2.0-py3-none-any.whl
+pip install yt_ts_cli-0.4.0-py3-none-any.whl
 ```
 
 ## Development
@@ -204,7 +238,7 @@ yt-ts-cli --help
 uv build
 
 # Test the built wheel
-pip install dist/yt_ts_cli-0.2.0-py3-none-any.whl --force-reinstall
+pip install dist/yt_ts_cli-0.4.0-py3-none-any.whl --force-reinstall
 yt-ts-cli --help
 ```
 
@@ -242,10 +276,24 @@ MIT License - see LICENSE file for details.
    - Install UV: `curl -LsSf https://astral.sh/uv/install.sh | sh`
    - Or use pip instead: `pip install .`
 
+5. **Debugging issues**
+   - Use `--verbose` flag to see detailed logging information
+   - Check the debug output for specific error details
+
+## Logging Levels
+
+The application uses professional logging with three levels:
+
+- **Silent Mode** (`--silent`): No output except the actual transcript content. Perfect for scripting and piping.
+- **Normal Mode** (default): Standard informational messages about the process.
+- **Verbose Mode** (`--verbose`): Detailed debug information with timestamps for troubleshooting.
+
+All log messages are sent to stderr, ensuring they don't interfere with stdout output when piping or redirecting transcript content.
+
 ## Changelog
 
 ### v0.3.0
-- Added `--silent` flag to supress messages
+- Added `--silent` flag to suppress messages
 - Added `--version` flag to display version information
 - Enhanced silent mode to suppress ALL messages (including app messages)
 - Improved yt-dlp output suppression with better error handling
