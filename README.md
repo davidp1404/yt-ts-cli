@@ -1,6 +1,7 @@
 # YouTube Transcript CLI (yt-ts-cli)
 
-A professional command-line tool to list and download YouTube video transcripts (subtitles) and convert them to plain text format.
+A simple command-line tool to list and download YouTube video transcripts (subtitles) and convert them to plain text format.
+It is part of the preliminary work to develop an MCP agent.
 
 ## Features
 
