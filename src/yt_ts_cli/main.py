@@ -304,39 +304,34 @@ def main():
         epilog="""
 Examples:
   %(prog)s list https://youtu.be/5X6uoKA41h4
-  %(prog)s list --verbose https://youtu.be/5X6uoKA41h4
   %(prog)s --verbose list https://youtu.be/5X6uoKA41h4
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l en -t manual -o transcript_en.txt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o ./transcripts/spanish.txt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o - > transcript.txt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o stdout | grep "keyword"
-  %(prog)s download --silent https://youtu.be/5X6uoKA41h4 -l es -o - | head -10
   %(prog)s --silent download https://youtu.be/5X6uoKA41h4 -l es -o - | head -10
-  %(prog)s download --verbose https://youtu.be/5X6uoKA41h4 -l es -o transcript.txt
+  %(prog)s --verbose download https://youtu.be/5X6uoKA41h4 -l es -o transcript.txt
         """
     )
     
     # Add version flag
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     
-    # Add global logging flags
-    parser.add_argument('--silent', action='store_true', 
-                       help='Suppress all messages except output')
-    parser.add_argument('--verbose', action='store_true',
-                       help='Enable verbose logging with timestamps and debug information')
+    # Add mutually exclusive group for logging flags (global only)
+    logging_group = parser.add_mutually_exclusive_group()
+    logging_group.add_argument('--silent', action='store_true', 
+                              help='Suppress all messages except output')
+    logging_group.add_argument('--verbose', action='store_true',
+                              help='Enable verbose logging with timestamps and debug information')
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
-    # List command
+    # List command (no logging flags - they're global only)
     list_parser = subparsers.add_parser('list', help='List available transcript languages')
     list_parser.add_argument('url', help='YouTube video URL')
-    list_parser.add_argument('--silent', action='store_true', 
-                            help='Suppress all messages except output')
-    list_parser.add_argument('--verbose', action='store_true',
-                            help='Enable verbose logging with timestamps and debug information')
     
-    # Download command
+    # Download command (no logging flags - they're global only)
     download_parser = subparsers.add_parser('download', help='Download transcript')
     download_parser.add_argument('url', help='YouTube video URL')
     download_parser.add_argument('-l', '--language', required=True, 
@@ -345,26 +340,12 @@ Examples:
                                default='both', help='Subtitle type (default: both)')
     download_parser.add_argument('-o', '--output', default='./transcript.txt', 
                                help='Output file path (default: ./transcript.txt). Use "-" or "stdout" to write to stdout')
-    download_parser.add_argument('--silent', action='store_true', 
-                                help='Suppress all messages except output')
-    download_parser.add_argument('--verbose', action='store_true',
-                                help='Enable verbose logging with timestamps and debug information')
     
-    # Manual check for global flags in sys.argv
-    silent = '--silent' in sys.argv
-    verbose = '--verbose' in sys.argv
-    
-    # Parse arguments normally
+    # Parse arguments
     args = parser.parse_args()
     
-    # Also check if flags are in the parsed args (for command-specific flags)
-    if hasattr(args, 'silent') and args.silent:
-        silent = True
-    if hasattr(args, 'verbose') and args.verbose:
-        verbose = True
-    
-    # Setup logging based on arguments
-    logger = setup_logging(silent=silent, verbose=verbose)
+    # Setup logging based on global arguments (much simpler!)
+    logger = setup_logging(silent=args.silent, verbose=args.verbose)
     
     if not args.command:
         parser.print_help()

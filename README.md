@@ -33,7 +33,7 @@ A professional command-line tool to list and download YouTube video transcripts 
 3. **Or install from built wheel:**
    ```bash
    uv build
-   uv pip install dist/yt_ts_cli-0.4.0-py3-none-any.whl
+   uv pip install dist/yt_ts_cli-0.3.1-py3-none-any.whl
    yt-ts-cli --help
    ```
 
@@ -99,23 +99,19 @@ yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o - | wc -w
 ### Logging and Verbosity Options
 
 ```bash
-# Silent mode - suppress all messages except output (both positions work)
-yt-ts-cli download --silent https://youtu.be/VIDEO_ID -l es -o -
+# Silent mode - suppress all messages except output
 yt-ts-cli --silent download https://youtu.be/VIDEO_ID -l es -o -
 
-# Verbose mode - detailed logging with timestamps (both positions work)
-yt-ts-cli download --verbose https://youtu.be/VIDEO_ID -l es -o transcript.txt
+# Verbose mode - detailed logging with timestamps
 yt-ts-cli --verbose download https://youtu.be/VIDEO_ID -l es -o transcript.txt
 
 # Normal mode - standard informational messages (default)
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o transcript.txt
 
-# Silent listing (both positions work)
-yt-ts-cli list --silent https://youtu.be/VIDEO_ID
+# Silent listing
 yt-ts-cli --silent list https://youtu.be/VIDEO_ID
 
-# Verbose listing (both positions work)
-yt-ts-cli list --verbose https://youtu.be/VIDEO_ID
+# Verbose listing
 yt-ts-cli --verbose list https://youtu.be/VIDEO_ID
 ```
 
@@ -123,21 +119,17 @@ yt-ts-cli --verbose list https://youtu.be/VIDEO_ID
 
 #### Global Options
 - `--version`: Show version information and exit
-- `--silent`: Suppress all messages except output (can be used globally or per-command)
-- `--verbose`: Enable detailed logging with timestamps and debug information (can be used globally or per-command)
+- `--silent`: Suppress all messages except output (mutually exclusive with --verbose)
+- `--verbose`: Enable detailed logging with timestamps and debug information (mutually exclusive with --silent)
 
 #### `list` command
 - `url`: YouTube video URL
-- `--silent`: Suppress all messages except output
-- `--verbose`: Enable detailed logging with timestamps
 
 #### `download` command
 - `url`: YouTube video URL
 - `-l, --language`: Language code (required) - e.g., en, es, fr, de
 - `-t, --type`: Subtitle type - choices: manual, auto, both (default: both)
 - `-o, --output`: Output file path (default: ./transcript.txt). Use "-" or "stdout" to write to stdout
-- `--silent`: Suppress all messages except output
-- `--verbose`: Enable detailed logging with timestamps
 
 ### Language Codes
 
@@ -195,7 +187,7 @@ This creates both wheel (.whl) and source distribution (.tar.gz) files in the `d
 
 ### Install from Local Build
 ```bash
-pip install dist/yt_ts_cli-0.4.0-py3-none-any.whl
+pip install dist/yt_ts_cli-0.3.1-py3-none-any.whl
 ```
 
 ### Share with Others
@@ -206,7 +198,7 @@ uv build
 
 # Share the wheel file
 # Others can install it with:
-pip install yt_ts_cli-0.4.0-py3-none-any.whl
+pip install yt_ts_cli-0.3.1-py3-none-any.whl
 ```
 
 ## Development
@@ -238,7 +230,7 @@ yt-ts-cli --help
 uv build
 
 # Test the built wheel
-pip install dist/yt_ts_cli-0.4.0-py3-none-any.whl --force-reinstall
+pip install dist/yt_ts_cli-0.3.1-py3-none-any.whl --force-reinstall
 yt-ts-cli --help
 ```
 
@@ -292,7 +284,7 @@ All log messages are sent to stderr, ensuring they don't interfere with stdout o
 
 ## Changelog
 
-### v0.3.0
+### v0.3.1
 - Added `--silent` flag to suppress messages
 - Added `--version` flag to display version information
 - Enhanced silent mode to suppress ALL messages (including app messages)
