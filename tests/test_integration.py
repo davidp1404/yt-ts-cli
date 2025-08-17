@@ -100,7 +100,7 @@ class TestRealYouTubeIntegration:
         
         try:
             # Try to download Spanish transcript
-            download_transcript(test_url, 'es', '-', 'both', logger)
+            download_transcript(test_url, 'es', '-', 'both', False, logger)
             captured = capsys.readouterr()
             
             # Should have some transcript content
@@ -128,7 +128,7 @@ class TestRealYouTubeIntegration:
             
             try:
                 # Try to download English transcript from TED talk
-                download_transcript(test_url, 'en', output_file, 'both', logger)
+                download_transcript(test_url, 'en', output_file, 'both', False, logger)
                 
                 # Check that file was created
                 assert os.path.exists(output_file)
@@ -146,6 +146,37 @@ class TestRealYouTubeIntegration:
             except SystemExit as e:
                 if "not available" in str(e):
                     pytest.skip("English subtitles not available for this TED talk")
+                else:
+                    pytest.skip(f"Download failed: {e}")
+            except Exception as e:
+                pytest.skip(f"Network error or video unavailable: {e}")
+    
+    def test_download_real_transcript_vtt_format(self):
+        """Test downloading a real transcript in VTT format."""
+        logger = setup_logging(silent=True, verbose=False)
+        test_url = TEST_URLS['spanish_medical']
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_file = os.path.join(temp_dir, 'transcript.vtt')
+            
+            try:
+                # Try to download Spanish transcript in VTT format
+                download_transcript(test_url, 'es', output_file, 'both', True, logger)
+                
+                # Check that file was created
+                assert os.path.exists(output_file)
+                
+                # Check file has VTT content
+                with open(output_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                assert len(content) > 0
+                # Should contain VTT formatting in VTT mode
+                assert "WEBVTT" in content or "-->" in content
+                
+            except SystemExit as e:
+                if "not available" in str(e):
+                    pytest.skip("Spanish subtitles not available for this video")
                 else:
                     pytest.skip(f"Download failed: {e}")
             except Exception as e:

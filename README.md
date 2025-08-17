@@ -1,6 +1,6 @@
 # YouTube Transcript CLI (yt-ts-cli)
 
-A simple command-line tool to list and download YouTube video transcripts (subtitles) and convert them to plain text format.
+A simple command-line tool to list and download YouTube video transcripts (subtitles) and convert them to plain text format or keep them in VTT format.
 It is part of the preliminary work to develop an MCP agent.
 
 ## Features
@@ -8,6 +8,7 @@ It is part of the preliminary work to develop an MCP agent.
 - List available manual subtitles for YouTube videos
 - Download transcripts in multiple languages
 - Automatic conversion from VTT to clean plain text
+- Option to save transcripts in original VTT format
 - Support for manual and auto-generated subtitles
 - Automatic cleanup of temporary files
 - Support for multiple language codes (en, es, fr, de, etc.)
@@ -34,7 +35,7 @@ It is part of the preliminary work to develop an MCP agent.
 3. **Or install from built wheel:**
    ```bash
    uv build
-   uv pip install dist/yt_ts_cli-0.3.2-py3-none-any.whl
+   uv pip install dist/yt_ts_cli-0.3.3-py3-none-any.whl
    yt-ts-cli --help
    ```
 
@@ -83,11 +84,17 @@ yt-ts-cli download https://youtu.be/VIDEO_ID -l es
 # Download English manual transcript to specific file
 yt-ts-cli download https://youtu.be/VIDEO_ID -l en -t manual -o transcript_en.txt
 
+# Download transcript in VTT format (preserves timing and formatting)
+yt-ts-cli download https://youtu.be/VIDEO_ID -l es --vtt -o transcript.vtt
+
 # Download to a file in a subdirectory
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o ./transcripts/spanish.txt
 
 # Write to stdout (useful for piping)
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o -
+
+# Write VTT format to stdout
+yt-ts-cli download https://youtu.be/VIDEO_ID -l es --vtt -o -
 
 # Write to stdout and redirect to file
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o stdout > transcript.txt
@@ -130,7 +137,8 @@ yt-ts-cli --verbose list https://youtu.be/VIDEO_ID
 - `url`: YouTube video URL
 - `-l, --language`: Language code (required) - e.g., en, es, fr, de
 - `-t, --type`: Subtitle type - choices: manual, auto, both (default: both)
-- `-o, --output`: Output file path (default: ./transcript.txt). Use "-" or "stdout" to write to stdout
+- `-o, --output`: Output file path (default: ./transcript.txt or ./transcript.vtt based on format). Use "-" or "stdout" to write to stdout
+- `--vtt`: Save transcript in VTT format instead of plain text
 
 ### Language Codes
 
@@ -159,11 +167,17 @@ yt-ts-cli list https://youtu.be/5X6uoKA41h4
 # Download Spanish transcript with standard logging
 yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es-ES -o musculos_fuertes.txt
 
+# Download Spanish transcript in VTT format (preserves timing)
+yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es-ES --vtt -o musculos_fuertes.vtt
+
 # Download only manual English subtitles with verbose logging
 yt-ts-cli download --verbose https://youtu.be/5X6uoKA41h4 -l en -t manual -o english_manual.txt
 
 # Write transcript to stdout in silent mode (perfect for piping)
 yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o -
+
+# Write VTT format to stdout
+yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es --vtt -o -
 
 # Pipe transcript to other commands with clean output
 yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o stdout | head -10
@@ -188,7 +202,7 @@ This creates both wheel (.whl) and source distribution (.tar.gz) files in the `d
 
 ### Install from Local Build
 ```bash
-pip install dist/yt_ts_cli-0.3.2-py3-none-any.whl
+pip install dist/yt_ts_cli-0.3.3-py3-none-any.whl
 ```
 
 ### Share with Others
@@ -199,7 +213,7 @@ uv build
 
 # Share the wheel file
 # Others can install it with:
-pip install yt_ts_cli-0.3.2-py3-none-any.whl
+pip install yt_ts_cli-0.3.3-py3-none-any.whl
 ```
 
 ## Development
@@ -231,7 +245,7 @@ yt-ts-cli --help
 uv build
 
 # Test the built wheel
-pip install dist/yt_ts_cli-0.3.2-py3-none-any.whl --force-reinstall
+pip install dist/yt_ts_cli-0.3.3-py3-none-any.whl --force-reinstall
 yt-ts-cli --help
 ```
 
@@ -357,6 +371,13 @@ The application uses professional logging with three levels:
 All log messages are sent to stderr, ensuring they don't interfere with stdout output when piping or redirecting transcript content.
 
 ## Changelog
+
+### v0.3.3
+- Added `--vtt` flag to save transcripts in original VTT format instead of plain text
+- VTT format preserves timing information and original subtitle formatting
+- Default output filename now changes based on format (transcript.txt vs transcript.vtt)
+- Added VTT format support for stdout output
+- Enhanced help examples to demonstrate VTT format usage
 
 ### v0.3.2
 - Added comprehensive pytest test suite with both unit and integration tests

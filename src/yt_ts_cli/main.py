@@ -97,9 +97,14 @@ def get_language_name(lang_code):
     return lang_map.get(lang_code, lang_code.upper())
 
 
-def download_transcript(url, language, output_file, subtitle_type, logger):
+def download_transcript(url, language, output_file, subtitle_type, vtt_format, logger):
     """Download transcript for specified language."""
-    logger.info(f"Downloading {subtitle_type} transcript in '{language}' for: {url}")
+    format_type = "VTT" if vtt_format else "plain text"
+    logger.info(f"Downloading {subtitle_type} transcript in '{language}' as {format_type} for: {url}")
+    
+    # Set default output filename based on format if not provided
+    if output_file is None:
+        output_file = './transcript.vtt' if vtt_format else './transcript.txt'
     
     # Check if output should go to stdout
     write_to_stdout = output_file == '-' or output_file.lower() == 'stdout'
@@ -169,11 +174,19 @@ def download_transcript(url, language, output_file, subtitle_type, logger):
                         vtt_file = vtt_files[0]
                         logger.debug(f"Processing VTT file: {vtt_file}")
                         
-                        # Convert to plain text
-                        if write_to_stdout:
-                            convert_vtt_to_stdout(vtt_file, logger)
+                        # Process based on format requested
+                        if vtt_format:
+                            # Save as VTT format
+                            if write_to_stdout:
+                                copy_vtt_to_stdout(vtt_file, logger)
+                            else:
+                                copy_vtt_to_file(vtt_file, output_path, logger)
                         else:
-                            convert_vtt_to_text_file(vtt_file, output_path, logger)
+                            # Convert to plain text
+                            if write_to_stdout:
+                                convert_vtt_to_stdout(vtt_file, logger)
+                            else:
+                                convert_vtt_to_text_file(vtt_file, output_path, logger)
                         
                         # VTT files will be automatically deleted when temp directory is cleaned up
                         
@@ -190,7 +203,58 @@ def download_transcript(url, language, output_file, subtitle_type, logger):
         logger.debug("Temporary directory cleaned up")
 
 
-def convert_vtt_to_stdout(vtt_file, logger):
+def copy_vtt_to_stdout(vtt_file, logger):
+    """Copy VTT file content directly to stdout."""
+    try:
+        logger.debug(f"Copying VTT file to stdout: {vtt_file}")
+        
+        with open(vtt_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Write VTT content directly to stdout
+        print(content)
+        logger.debug("VTT copy to stdout completed")
+        
+    except Exception as e:
+        logger.error(f"Error copying VTT to stdout: {e}")
+        logger.debug("Exception details:", exc_info=True)
+        sys.exit(1)
+
+
+def copy_vtt_to_file(vtt_file, output_file, logger):
+    """Copy VTT file to specified output file."""
+    try:
+        # Ensure output_file is a Path object and resolve it
+        output_path = Path(output_file).resolve()
+        logger.debug(f"Copying VTT file: {vtt_file} -> {output_path}")
+        
+        # If the output path exists and is a directory, create a filename inside it
+        if output_path.exists() and output_path.is_dir():
+            output_path = output_path / "transcript.vtt"
+            logger.warning(f"Output path is a directory, saving to: {output_path}")
+        
+        # Create parent directory if it doesn't exist
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Ensured parent directory exists: {output_path.parent}")
+        
+        with open(vtt_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Write VTT content to specified output file
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        logger.info(f"Transcript saved in VTT format: {output_path}")
+        logger.debug(f"File size: {output_path.stat().st_size} bytes")
+        
+    except Exception as e:
+        logger.error(f"Error copying VTT to file: {e}")
+        logger.debug(f"Debug info - output_file: {output_file}, type: {type(output_file)}")
+        logger.debug(f"Debug info - resolved path: {Path(output_file).resolve()}")
+        logger.debug("Exception details:", exc_info=True)
+        sys.exit(1)
+
+
     """Convert VTT file to plain text and write to stdout."""
     try:
         logger.debug(f"Converting VTT file to stdout: {vtt_file}")
@@ -308,8 +372,10 @@ Examples:
   %(prog)s --verbose list https://youtu.be/5X6uoKA41h4
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l en -t manual -o transcript_en.txt
+  %(prog)s download https://youtu.be/5X6uoKA41h4 -l es --vtt -o transcript.vtt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o ./transcripts/spanish.txt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o - > transcript.txt
+  %(prog)s download https://youtu.be/5X6uoKA41h4 -l es --vtt -o - > transcript.vtt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o stdout | grep "keyword"
   %(prog)s --silent download https://youtu.be/5X6uoKA41h4 -l es -o - | head -10
   %(prog)s --verbose download https://youtu.be/5X6uoKA41h4 -l es -o transcript.txt
@@ -339,8 +405,10 @@ Examples:
                                help='Language code (e.g., en, es, fr)')
     download_parser.add_argument('-t', '--type', choices=['manual', 'auto', 'both'], 
                                default='both', help='Subtitle type (default: both)')
-    download_parser.add_argument('-o', '--output', default='./transcript.txt', 
-                               help='Output file path (default: ./transcript.txt). Use "-" or "stdout" to write to stdout')
+    download_parser.add_argument('-o', '--output', default=None, 
+                               help='Output file path (default: ./transcript.txt or ./transcript.vtt based on format). Use "-" or "stdout" to write to stdout')
+    download_parser.add_argument('--vtt', action='store_true',
+                               help='Save transcript in VTT format instead of plain text')
     
     # Parse arguments
     args = parser.parse_args()
@@ -365,7 +433,7 @@ Examples:
     if args.command == 'list':
         list_languages(args.url, logger)
     elif args.command == 'download':
-        download_transcript(args.url, args.language, args.output, args.type, logger)
+        download_transcript(args.url, args.language, args.output, args.type, args.vtt, logger)
 
 
 if __name__ == '__main__':

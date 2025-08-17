@@ -65,7 +65,7 @@ class TestCLIArguments:
                 main()
         
         captured = capsys.readouterr()
-        assert "yt-ts-cli 0.3.2" in captured.out
+        assert "yt-ts-cli 0.3.3" in captured.out
     
     def test_main_help_flag(self, capsys):
         """Test --help flag."""
@@ -125,6 +125,31 @@ class TestModuleAvailability:
             
             # Verify that list_languages was called
             mock_list.assert_called_once()
+    
+    def test_vtt_flag_in_help(self, capsys):
+        """Test that --vtt flag appears in download command help."""
+        with patch('sys.argv', ['yt-ts-cli', 'download', '--help']):
+            with pytest.raises(SystemExit):
+                main()
+        
+        captured = capsys.readouterr()
+        assert "--vtt" in captured.out
+        assert "Save transcript in VTT format instead of plain text" in captured.out
+    
+    @patch('importlib.util.find_spec')
+    def test_main_download_with_vtt_flag(self, mock_find_spec):
+        """Test that main accepts --vtt flag for download command."""
+        mock_find_spec.return_value = MagicMock()  # yt-dlp available
+        
+        # Mock the download_transcript function to avoid actual network calls
+        with patch('yt_ts_cli.main.download_transcript') as mock_download:
+            with patch('sys.argv', ['yt-ts-cli', 'download', 'https://youtube.com/watch?v=test', '-l', 'en', '--vtt']):
+                main()
+            
+            # Verify that download_transcript was called with vtt_format=True
+            mock_download.assert_called_once()
+            args = mock_download.call_args[0]  # positional arguments
+            assert args[4] == True  # vtt_format parameter should be True
 
 
 if __name__ == '__main__':
