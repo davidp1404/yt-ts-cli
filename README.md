@@ -33,7 +33,7 @@ A professional command-line tool to list and download YouTube video transcripts 
 3. **Or install from built wheel:**
    ```bash
    uv build
-   uv pip install dist/yt_ts_cli-0.3.1-py3-none-any.whl
+   uv pip install dist/yt_ts_cli-0.3.2-py3-none-any.whl
    yt-ts-cli --help
    ```
 
@@ -187,7 +187,7 @@ This creates both wheel (.whl) and source distribution (.tar.gz) files in the `d
 
 ### Install from Local Build
 ```bash
-pip install dist/yt_ts_cli-0.3.1-py3-none-any.whl
+pip install dist/yt_ts_cli-0.3.2-py3-none-any.whl
 ```
 
 ### Share with Others
@@ -198,7 +198,7 @@ uv build
 
 # Share the wheel file
 # Others can install it with:
-pip install yt_ts_cli-0.3.1-py3-none-any.whl
+pip install yt_ts_cli-0.3.2-py3-none-any.whl
 ```
 
 ## Development
@@ -230,9 +230,82 @@ yt-ts-cli --help
 uv build
 
 # Test the built wheel
-pip install dist/yt_ts_cli-0.3.1-py3-none-any.whl --force-reinstall
+pip install dist/yt_ts_cli-0.3.2-py3-none-any.whl --force-reinstall
 yt-ts-cli --help
 ```
+
+## Testing
+
+The project includes a comprehensive test suite to ensure reliability and correctness.
+
+### Running Tests
+
+```bash
+# Run fast unit tests (no network calls)
+python run_tests.py unit
+
+# Run integration tests with real YouTube URLs (slow)
+python run_tests.py integration
+
+# Run all tests (unit + integration)
+python run_tests.py all
+```
+
+### Test Types
+
+#### **Unit Tests** (`tests/test_simple.py`) - Fast ⚡
+- **No network calls** - Run offline
+- Test CLI argument parsing, logging, utility functions
+- **9 tests, ~0.2 seconds**
+- Safe to run frequently during development
+
+#### **Integration Tests** (`tests/test_integration.py`) - Slow 🌐
+- **Real YouTube URLs** - Requires internet connection
+- Test actual video listing and transcript downloading
+- **Uses real videos** including the Spanish medical video you mentioned
+- **~80+ seconds** - Network dependent
+- May fail due to video availability or network issues
+
+### Test Coverage
+
+The test suite covers:
+
+- **CLI Argument Parsing**: Version flags, help text, mutual exclusion
+- **Logging Configuration**: Silent, verbose, and normal modes  
+- **Language Mapping**: Language code to human-readable name conversion
+- **Module Availability**: yt-dlp dependency checking
+- **Error Handling**: Missing dependencies, invalid arguments
+- **Real Video Processing**: Actual YouTube video listing and downloading
+- **File Operations**: VTT to text conversion, stdout output
+- **Network Error Handling**: Invalid URLs, unavailable languages
+
+### Test Structure
+
+```
+tests/
+├── __init__.py          # Test package
+├── conftest.py          # Shared fixtures and configuration
+├── test_simple.py       # Basic functionality tests (working)
+├── test_main.py         # Comprehensive main functionality tests
+└── test_edge_cases.py   # Edge cases and error handling tests
+```
+
+### Adding New Tests
+
+When adding new functionality:
+
+1. Add tests to the appropriate test file
+2. Use descriptive test names that explain what is being tested
+3. Include both positive and negative test cases
+4. Mock external dependencies (yt-dlp, file system, network calls)
+5. Run the test suite to ensure all tests pass
+
+### Test Dependencies
+
+The test suite uses:
+- **pytest**: Test framework
+- **pytest-mock**: Mocking utilities
+- **unittest.mock**: Python's built-in mocking (via pytest-mock)
 
 ## License
 
@@ -283,6 +356,17 @@ The application uses professional logging with three levels:
 All log messages are sent to stderr, ensuring they don't interfere with stdout output when piping or redirecting transcript content.
 
 ## Changelog
+
+### v0.3.2
+- Added comprehensive pytest test suite with both unit and integration tests
+- **Unit Tests**: Fast offline tests for CLI parsing, logging, and utilities (9 tests)
+- **Integration Tests**: Real YouTube URL tests with actual video downloads (11 tests)
+- Added test runner script (`run_tests.py`) with support for different test types
+- Tests now use diverse YouTube content (Spanish medical, TED talks, popular videos)
+- Fixed linter issues (E713) for better code style compliance
+- Improved error handling in integration tests for network issues
+- Added pytest configuration and dev dependencies to pyproject.toml
+- Enhanced test coverage for real-world scenarios and edge cases
 
 ### v0.3.1
 - Added `--silent` flag to suppress messages

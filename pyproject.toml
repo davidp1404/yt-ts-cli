@@ -1,6 +1,6 @@
 [project]
 name = "yt-ts-cli"
-version = "0.3.1"
+version = "0.3.2"
 description = "YouTube Transcript CLI - Download and convert YouTube video transcripts to plain text"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -31,6 +31,13 @@ dependencies = [
     "yt-dlp>=2023.1.6",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/davidp1404/yt-ts-cli"
 Repository = "https://github.com/davidp1404/yt-ts-cli.git"
@@ -51,4 +58,40 @@ include = [
     "/src",
     "/README.md",
     "/LICENSE",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["src/yt_ts_cli"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
 ]

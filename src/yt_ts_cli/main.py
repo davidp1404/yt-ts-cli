@@ -9,6 +9,7 @@ import sys
 import os
 import tempfile
 import contextlib
+import importlib.util
 from pathlib import Path
 import yt_dlp
 import re
@@ -208,7 +209,7 @@ def convert_vtt_to_stdout(vtt_file, logger):
                 not line.startswith('WEBVTT') and 
                 not line.startswith('NOTE') and
                 not line.startswith('STYLE') and
-                not '-->' in line and
+                '-->' not in line and
                 not re.match(r'^\d+$', line) and
                 not line.startswith('<') and
                 not line.endswith('>')):
@@ -265,7 +266,7 @@ def convert_vtt_to_text_file(vtt_file, output_file, logger):
                 not line.startswith('WEBVTT') and 
                 not line.startswith('NOTE') and
                 not line.startswith('STYLE') and
-                not '-->' in line and
+                '-->' not in line and
                 not re.match(r'^\d+$', line) and
                 not line.startswith('<') and
                 not line.endswith('>')):
@@ -352,12 +353,11 @@ Examples:
         return
     
     # Check if yt-dlp is available
-    try:
-        import yt_dlp
-        logger.debug("yt-dlp module loaded successfully")
-    except ImportError:
+    if importlib.util.find_spec("yt_dlp") is None:
         logger.error("yt-dlp module not found. Please install it with: pip install yt-dlp")
         sys.exit(1)
+    
+    logger.debug("yt-dlp module is available")
     
     logger.debug(f"Command: {args.command}")
     logger.debug(f"Arguments: {vars(args)}")
