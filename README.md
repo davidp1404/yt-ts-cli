@@ -69,10 +69,10 @@ uv run yt-ts-cli --help
 yt-ts-cli list https://youtu.be/VIDEO_ID
 
 # Verbose listing with debug information
-yt-ts-cli list --verbose https://youtu.be/VIDEO_ID
+yt-ts-cli --verbose list https://youtu.be/VIDEO_ID
 
 # Silent listing (minimal output)
-yt-ts-cli list --silent https://youtu.be/VIDEO_ID
+yt-ts-cli --silent list https://youtu.be/VIDEO_ID
 ```
 
 ### Download Transcript
