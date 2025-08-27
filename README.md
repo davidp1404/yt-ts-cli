@@ -1,3 +1,7 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/davidp1404/yt-ts-cli)
+
+
+
 # YouTube Transcript CLI (yt-ts-cli)
 
 A simple command-line tool to list and download YouTube video transcripts (subtitles) and convert them to plain text format or keep them in VTT format.
