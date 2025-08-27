@@ -78,6 +78,9 @@ yt-ts-cli --silent list https://youtu.be/VIDEO_ID
 
 ### Download Transcript
 ```bash
+# Download transcript in original video language (auto-detected)
+yt-ts-cli download https://youtu.be/VIDEO_ID
+
 # Download Spanish transcript to default file (transcript.txt)
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es
 
@@ -85,22 +88,28 @@ yt-ts-cli download https://youtu.be/VIDEO_ID -l es
 yt-ts-cli download https://youtu.be/VIDEO_ID -l en -t manual -o transcript_en.txt
 
 # Download transcript in VTT format (preserves timing and formatting)
-yt-ts-cli download https://youtu.be/VIDEO_ID -l es --vtt -o transcript.vtt
+yt-ts-cli download https://youtu.be/VIDEO_ID --vtt -o transcript.vtt
+
+# Download transcript in original language as VTT format
+yt-ts-cli download https://youtu.be/VIDEO_ID --vtt -o transcript.vtt
 
 # Download to a file in a subdirectory
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o ./transcripts/spanish.txt
 
-# Write to stdout (useful for piping)
+# Write to stdout (useful for piping) - uses original language
+yt-ts-cli download https://youtu.be/VIDEO_ID -o -
+
+# Write specific language to stdout
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o -
 
 # Write VTT format to stdout
-yt-ts-cli download https://youtu.be/VIDEO_ID -l es --vtt -o -
+yt-ts-cli download https://youtu.be/VIDEO_ID --vtt -o -
 
 # Write to stdout and redirect to file
-yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o stdout > transcript.txt
+yt-ts-cli download https://youtu.be/VIDEO_ID -o stdout > transcript.txt
 
 # Pipe to other commands
-yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o - | grep "keyword"
+yt-ts-cli download https://youtu.be/VIDEO_ID -o - | grep "keyword"
 yt-ts-cli download https://youtu.be/VIDEO_ID -l es -o - | wc -w
 ```
 
@@ -135,7 +144,7 @@ yt-ts-cli --verbose list https://youtu.be/VIDEO_ID
 
 #### `download` command
 - `url`: YouTube video URL
-- `-l, --language`: Language code (required) - e.g., en, es, fr, de
+- `-l, --language`: Language code (optional) - e.g., en, es, fr, de. If not specified, automatically detects and uses the original video language
 - `-t, --type`: Subtitle type - choices: manual, auto, both (default: both)
 - `-o, --output`: Output file path (default: ./transcript.txt or ./transcript.vtt based on format). Use "-" or "stdout" to write to stdout
 - `--vtt`: Save transcript in VTT format instead of plain text
@@ -164,6 +173,9 @@ Common language codes supported:
 # List all available manual subtitles
 yt-ts-cli list https://youtu.be/5X6uoKA41h4
 
+# Download transcript in original language (auto-detected)
+yt-ts-cli download https://youtu.be/5X6uoKA41h4
+
 # Download Spanish transcript with standard logging
 yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es-ES -o musculos_fuertes.txt
 
@@ -173,14 +185,17 @@ yt-ts-cli download https://youtu.be/5X6uoKA41h4 -l es-ES --vtt -o musculos_fuert
 # Download only manual English subtitles with verbose logging
 yt-ts-cli download --verbose https://youtu.be/5X6uoKA41h4 -l en -t manual -o english_manual.txt
 
-# Write transcript to stdout in silent mode (perfect for piping)
+# Write transcript to stdout in silent mode (perfect for piping) - uses original language
+yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -o -
+
+# Write specific language transcript to stdout
 yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o -
 
 # Write VTT format to stdout
 yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es --vtt -o -
 
 # Pipe transcript to other commands with clean output
-yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o stdout | head -10
+yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -o stdout | head -10
 yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o - | grep -i "muscle"
 yt-ts-cli download --silent https://youtu.be/5X6uoKA41h4 -l es -o - | wc -w
 
@@ -371,6 +386,14 @@ The application uses professional logging with three levels:
 All log messages are sent to stderr, ensuring they don't interfere with stdout output when piping or redirecting transcript content.
 
 ## Changelog
+
+### v0.4.0
+- **BREAKING CHANGE**: Made `-l/--language` parameter optional for download command
+- Added automatic original language detection when no language is specified
+- Language detection prioritizes manual subtitles over auto-generated ones
+- Falls back to common languages (en, es, fr, de, etc.) when video metadata is unavailable
+- Updated help examples to show usage without language parameter
+- Enhanced user experience by removing the need to specify language for most use cases
 
 ### v0.3.3
 - Added `--vtt` flag to save transcripts in original VTT format instead of plain text

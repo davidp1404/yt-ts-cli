@@ -97,6 +97,70 @@ def get_language_name(lang_code):
     return lang_map.get(lang_code, lang_code.upper())
 
 
+def detect_original_language(url, logger):
+    """Detect the original language of a YouTube video."""
+    logger.debug(f"Detecting original language for: {url}")
+    
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'writesubtitles': False,
+        'writeautomaticsub': False,
+        'noprogress': True,
+        'logger': SuppressYtDlpLogger(),
+    }
+    
+    try:
+        with suppress_stderr():
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                
+                # Try to get the original language from video metadata
+                original_language = info.get('language')
+                if original_language:
+                    logger.debug(f"Found original language from metadata: {original_language}")
+                    return original_language
+                
+                # Fallback: look for manual subtitles and prioritize common languages
+                manual_subs = info.get('subtitles', {})
+                if manual_subs:
+                    # Priority order for language detection
+                    priority_langs = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'ar', 'hi']
+                    
+                    # First, check if any priority language is available
+                    for lang in priority_langs:
+                        if lang in manual_subs:
+                            logger.debug(f"Selected priority language: {lang}")
+                            return lang
+                    
+                    # If no priority language found, use the first available manual subtitle
+                    first_lang = list(manual_subs.keys())[0]
+                    logger.debug(f"Using first available manual subtitle language: {first_lang}")
+                    return first_lang
+                
+                # Final fallback: check auto-generated subtitles
+                auto_subs = info.get('automatic_captions', {})
+                if auto_subs:
+                    # Same priority logic for auto-generated
+                    for lang in priority_langs:
+                        if lang in auto_subs:
+                            logger.debug(f"Selected priority auto-generated language: {lang}")
+                            return lang
+                    
+                    first_auto_lang = list(auto_subs.keys())[0]
+                    logger.debug(f"Using first available auto-generated subtitle language: {first_auto_lang}")
+                    return first_auto_lang
+                
+                # If nothing is found, default to English
+                logger.warning("No subtitles found, defaulting to English")
+                return 'en'
+                
+    except Exception as e:
+        logger.error(f"Error detecting original language: {e}")
+        logger.warning("Defaulting to English due to error")
+        return 'en'
+
+
 def download_transcript(url, language, output_file, subtitle_type, vtt_format, logger):
     """Download transcript for specified language."""
     format_type = "VTT" if vtt_format else "plain text"
@@ -255,7 +319,7 @@ def copy_vtt_to_file(vtt_file, output_file, logger):
         sys.exit(1)
 
 
-    """Convert VTT file to plain text and write to stdout."""
+def convert_vtt_to_stdout(vtt_file, logger):
     try:
         logger.debug(f"Converting VTT file to stdout: {vtt_file}")
         
@@ -370,14 +434,17 @@ def main():
 Examples:
   %(prog)s list https://youtu.be/5X6uoKA41h4
   %(prog)s --verbose list https://youtu.be/5X6uoKA41h4
+  %(prog)s download https://youtu.be/5X6uoKA41h4
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l en -t manual -o transcript_en.txt
+  %(prog)s download https://youtu.be/5X6uoKA41h4 --vtt -o transcript.vtt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es --vtt -o transcript.vtt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o ./transcripts/spanish.txt
+  %(prog)s download https://youtu.be/5X6uoKA41h4 -o - > transcript.txt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o - > transcript.txt
-  %(prog)s download https://youtu.be/5X6uoKA41h4 -l es --vtt -o - > transcript.vtt
+  %(prog)s download https://youtu.be/5X6uoKA41h4 --vtt -o - > transcript.vtt
   %(prog)s download https://youtu.be/5X6uoKA41h4 -l es -o stdout | grep "keyword"
-  %(prog)s --silent download https://youtu.be/5X6uoKA41h4 -l es -o - | head -10
+  %(prog)s --silent download https://youtu.be/5X6uoKA41h4 -o - | head -10
   %(prog)s --verbose download https://youtu.be/5X6uoKA41h4 -l es -o transcript.txt
         """
     )
@@ -401,8 +468,8 @@ Examples:
     # Download command (no logging flags - they're global only)
     download_parser = subparsers.add_parser('download', help='Download transcript')
     download_parser.add_argument('url', help='YouTube video URL')
-    download_parser.add_argument('-l', '--language', required=True, 
-                               help='Language code (e.g., en, es, fr)')
+    download_parser.add_argument('-l', '--language', default=None,
+                               help='Language code (e.g., en, es, fr). If not specified, uses the original video language')
     download_parser.add_argument('-t', '--type', choices=['manual', 'auto', 'both'], 
                                default='both', help='Subtitle type (default: both)')
     download_parser.add_argument('-o', '--output', default=None, 
@@ -433,7 +500,14 @@ Examples:
     if args.command == 'list':
         list_languages(args.url, logger)
     elif args.command == 'download':
-        download_transcript(args.url, args.language, args.output, args.type, args.vtt, logger)
+        # Auto-detect language if not provided
+        language = args.language
+        if language is None:
+            logger.info("No language specified, detecting original video language...")
+            language = detect_original_language(args.url, logger)
+            logger.info(f"Using detected language: {language} ({get_language_name(language)})")
+        
+        download_transcript(args.url, language, args.output, args.type, args.vtt, logger)
 
 
 if __name__ == '__main__':
